@@ -57,7 +57,3 @@ che generano effettivamente
   </ul>
 #+end_src
 il =dotimes= all'interno del codice in questione non è un costrutto di =lisp-html=, ed è invece un normalissimo =dotimes= di common lisp, che ha ciclato i numeri da =0..20= e ha generato =(li x " : " (fizzbuzz x))= per ognuno di questi
-
-* Utilizzo
-(...)
-
