@@ -1,0 +1,63 @@
+#+title: lisp-html
+
+* Introduzione
+=lisp-html= genera codice html a partire da codice lisp
+data la similitudine tra l'html e il codice lisp, almeno in quanto alberi, la struttura dell'html è la stessa del codice lisp che lo genera, ad esempio
+#+begin_src lisp
+  (with-tags (h1 "hello")
+    (ul
+     (li "here")
+     (li "is")
+     (li "a little")
+     (li "list")))
+#+end_src
+
+si traudce banalmente in
+#+begin_src html
+  <h1>hello</h1>
+  <ul>
+    <li>here</li>
+    <li>is</li>
+    <li>a little</li>
+    <li>list</li>
+  </ul>
+#+end_src
+
+** Codice arbitrario
+=lisp-html= permette di avere codice arbitrario all'interno delle tag, e mira al separare il meno possibile la logica di esecuzione di lisp dalla logica di scrittura dell'html.
+questo permette di avere cose quali
+#+begin_src lisp
+  (defun fizzbuzz (x)
+    (cond ((= (mod x 15) 0) "FizzBuzz")
+          ((= (mod x 3) 0) "Fizz")
+          ((= (mod x 5) 0) "Buzz")))
+
+  (with-tags
+    (ul
+     (dotimes (x 20)
+       (li x " : " (fizzbuzz x)))))
+#+end_src
+
+che generano effettivamente
+#+begin_src html
+  <ul>
+    <li>0 : FizzBuzz</li>
+    <li>1 : 1</li>
+    <li>2 : 2</li>
+    <li>3 : Fizz</li>
+    <li>4 : 4</li>
+    <li>5 : Buzz</li>
+    <li>6 : Fizz</li>
+    <li>7 : 7</li>
+    <li>8 : 8</li>
+    <li>9 : Fizz</li>
+    <li>10 : Buzz</li>
+    <li>11 : 11</li>
+    ...
+  </ul>
+#+end_src
+il =dotimes= all'interno del codice in questione non è un costrutto di =lisp-html=, ed è invece un normalissimo =dotimes= di common lisp, che ha ciclato i numeri da =0..20= e ha generato =(li x " : " (fizzbuzz x))= per ognuno di questi
+
+* Utilizzo
+(...)
+
