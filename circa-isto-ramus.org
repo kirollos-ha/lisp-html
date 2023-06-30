@@ -1,0 +1,12 @@
+pardon the maccheronic latin
+
+the code I have here pushed to main, I realized, is severerly unstructured, and past the point of my fleeble refactoring capabilities, especially when faced with code this knotted, that I wrote fully aware of the fact this thing's dependencies between components spread like a complete graph
+
+I have hereby decided to dedicate this branch to the big rewrite, which will mostly consist of all the things fowler said refactoring should NOT be, gradual, thought out, and rigorously tested against the original's behavoir, as this is, clearly, less refactoring and more, as the name suggests, the big rewrite
+
+#+begin_verse
+it's a high time we reviewed our design
+the code behind our system was just too byzantine
+we'll rewrite all this legacy, and take it offline
+and it's gonna compile first time
+#+end_verse
