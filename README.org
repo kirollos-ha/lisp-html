@@ -1,59 +1,307 @@
-#+title: lisp-html
+#+title: xml-lisp-thingy
+I might have accidentally reinvented react, without jsx though, that's a plus
 
-* Introduzione
-=lisp-html= genera codice html a partire da codice lisp
-data la similitudine tra l'html e il codice lisp, almeno in quanto alberi, la struttura dell'html è la stessa del codice lisp che lo genera, ad esempio
+if you have any system capable of properly reading =.org= files it might be better to download this file and read it there
+* Abstract
+this projects aims to provide a lisp system for generating html, xml or whatever other child of xml, while keeping the lisp execution logic as close as possible to the xml rendering logic, as to avoid having yet another ad hoc microlanguage to handle decisions/logic/variable expansion... during rendering, just use whatever plain lisp comes to mind, and it should probably work
+
+shamelessly inspired by
+ - paul graham's html generation example in =ansi common lisp=
+ - (partially) [[https://github.com/weavejester/hiccup]]
+
+and possibly already done by
+ - [[https://github.com/brennonyork/clj-template]]
+
+ - see examples to have a clue what this is about
+ - =macroexpand-1= everything this library has, it's the best way I have found to undestand what it does
+ - api reference is criminally incomplete, becuase the api is criminally incomplete
+
+** "Philosopy"
+we want the tag rendering logic to be as intertwineable as possible with the normal common lisp logic
+this is, as of now, achieved by expanding the tag rendering into code rendering the tags, meaning the tag attributes, body, and everything are just lisp code, what and how gets rendered can be thus controlled with all the tools you would use to control what code gets be executed, conditionals, loops, function calls, everything can be seamlessly used when controlling the rendering, no extra built in language, just let lisp do it
+
+* Installation
+ 1. clone this repository somewhere asdf knows about
+ 2. =(asdf:load-system :xmltags)=
+ 3. ???
+ 4. profit
+
+* Examples
+it is, as of now, still unclear where I want to put the line between "just throw some lisp there and it works" and "I'll wrap this into its own thing", so the examples below might vary with time
+
+note there is nothing about the library saying it only renders html, this is an xml library, I just used html in most of the examples becuase that's the xml I'm most familiar with
+** Small boilerplate disclaimer
+#+begin_quote
+NOTE: you may skip this part if you want, it is not of much importance, and should be regarded as some leftover scaffolding while I work on a better way to do what the abominable code below does, without being abominable
+#+end_quote
+Though all the code here runs correctly, given that the system does not yet provide a way to cleanly define a set of tags, all the following snippets have been executed after passing this to the repl (see the api reference for what any of this =xmltags:deftag= business means)
+also, the system does not yet provide any particulary advanced pretty printing/auto indent mechanisms, and the demonstrated output has been reindented for readability, everything else is as-rendered
 #+begin_src lisp
-  (with-tags (h1 "hello")
-    (ul
-     (li "here")
-     (li "is")
-     (li "a little")
-     (li "list")))
+  (defmacro paragraph (name)
+    `(xmltags:deftag ,name 
+       :closep nil 
+       :newline-after-open t 
+       :newline-before-close t 
+       :newline-after-close t))
+  (defmacro title (name)
+    `(oneline ,name))
+  (defmacro oneline (name)
+    `(xmltags:deftag ,name 
+       :closep nil 
+       :newline-after-open nil 
+       :newline-before-close nil 
+       :newline-after-close t))
+  (defmacro facetag (name)
+    `(xmltags:deftag ,name 
+       :closep nil 
+       :newline-after-open nil 
+       :newline-before-close nil 
+       :newline-after-close nil))
+  (paragraph html)
+  (paragraph head)
+  (paragraph body)
+  (paragraph p)
+
+  (paragraph ul)
+  (paragraph div)
+
+  (title h1)
+  (title h2)
+  (title h3)
+  (title h4)
+  (title h4)
+
+  (oneline li)
+  (oneline script)
+  (oneline link)
+  (oneline meta)
+  (oneline title)
 #+end_src
 
-si traudce banalmente in
+** just writing html in lisp
+it would be criminal not to support at least this, something like
+#+begin_src lisp
+  (ul
+   (li "this")
+   (li "is")
+   (li "a list"))
+#+end_src
+
+will render
 #+begin_src html
-  <h1>hello</h1>
   <ul>
-    <li>here</li>
+    <li>this</li>
     <li>is</li>
-    <li>a little</li>
-    <li>list</li>
+    <li>a list</li>
   </ul>
 #+end_src
-
-** Codice arbitrario
-=lisp-html= permette di avere codice arbitrario all'interno delle tag, e mira al separare il meno possibile la logica di esecuzione di lisp dalla logica di scrittura dell'html.
-questo permette di avere cose quali
+*** Attributes
+attributes are provided using common lisp's =&key= argument synthax
 #+begin_src lisp
-  (defun fizzbuzz (x)
-    (cond ((= (mod x 15) 0) "FizzBuzz")
-          ((= (mod x 3) 0) "Fizz")
-          ((= (mod x 5) 0) "Buzz")))
-
-  (with-tags
-    (ul
-     (dotimes (x 20)
-       (li x " : " (fizzbuzz x)))))
+  (div :style "another-flexbox-becuase also-a-menu i-dont-know-css"
+       (p :id "crisys" :style "color:red; background-color:red"
+          "this is a paragraph"
+          "that you probably can't read"))
 #+end_src
 
-che generano effettivamente
+renders
+#+begin_src html
+  <div style = "another-flexbox-becuase also-a-menu i-dont-know-css">
+    <p id = "crisys"style = "color:red; background-color:red">
+      this is a paragraphthat you probably can't read
+    </p>
+  </div>
+#+end_src
+
+** using lisp variables
+this is where the fun begins, there is nothing special about the variables used in the expansion, any lisp variable goes
+#+begin_src lisp
+  (let ((big-title (string-upcase "I am a big title"))
+        (divclass "some-class"))
+    (h1 big-title)
+    (div :class divclass)
+    (p "the class of my parent div is : " divclass))
+#+end_src
+
+expands to
+#+begin_src html
+  <h1>I AM A BIG TITLE</h1>
+  <div class = "some-class">
+  </div>
+  <p>
+    the class of my parent div is : some-class
+  </p>
+#+end_src
+
+(it is not (yet) supported to have the keys of =key = attr= be read from variables
+
+** using lisp constructs (flow control, functions)
+the fun continues, there is nothing special about using lisp variables either
+anything that is not recognized as "should I print this?" is automatically evaluated as lisp code, so you can easily do things like
+
+#+begin_src lisp
+  (let ((num 5))
+    (h1 (if (oddp num) "num is odd" "num is even")) ; if form should not be rendered, though its result should
+    (setf num 6) ; should not be rendered, is just evaluated
+    (h1 (if (oddp num) "num is odd" "num is even")))
+#+end_src
+
+which will work as expected
+#+begin_src html
+  <h1>num is odd</h1>
+  <h1>num is even</h1>
+#+end_src
+
+or even something like
+#+begin_src lisp
+  (defun list-to-html (lst)
+    (ul
+     (dolist (x lst)
+       (li x))))
+
+  (list-to-html '("sometimes" "I" "feel" "I've" "got" "to" "run" "away"))
+#+end_src
+
+which will actually work
 #+begin_src html
   <ul>
-    <li>0 : FizzBuzz</li>
-    <li>1 : 1</li>
-    <li>2 : 2</li>
-    <li>3 : Fizz</li>
-    <li>4 : 4</li>
-    <li>5 : Buzz</li>
-    <li>6 : Fizz</li>
-    <li>7 : 7</li>
-    <li>8 : 8</li>
-    <li>9 : Fizz</li>
-    <li>10 : Buzz</li>
-    <li>11 : 11</li>
-    ...
+    <li>sometimes</li>
+    <li>I</li>
+    <li>feel</li>
+    <li>I've</li>
+    <li>got</li>
+    <li>to</li>
+    <li>run</li>
+    <li>away</li>
   </ul>
 #+end_src
-il =dotimes= all'interno del codice in questione non è un costrutto di =lisp-html=, ed è invece un normalissimo =dotimes= di common lisp, che ha ciclato i numeri da =0..20= e ha generato =(li x " : " (fizzbuzz x))= per ognuno di questi
+
+** "support" for templating/components [beyond experimental]
+with the above defined we can easily add something resembling a reusable component by just using lisp functions
+as an example, this code
+#+begin_src lisp
+  (defun my-cool-div (text)
+    (div :class "my-cool-class"
+         "this is the beginning of my cool div : "
+         text))
+
+  (html
+   (head "something")
+   (body
+    (my-cool-div "I am some cool text")))
+#+end_src
+
+renders the following html
+#+begin_src html
+  <html>
+    <head>
+      something
+    </head>
+    <body>
+      <div class = "my-cool-class">
+        this is the beginning of my cool div : I am some cool text
+      </div>
+    </body>
+  </html>
+#+end_src
+
+some sick joke looking like a template system might be instead achieved in the exact same manner, take the following attempt at a template
+#+begin_src lisp
+  (defun ref (key env &key (test #'string=))
+    "rendering contexts might have to be defined in some more efficient manner later"
+    (cdr (assoc key env :test test)))
+
+  (defun template (&key env template-body)
+    (html
+     (head
+      (meta :charset (or (ref "charset" env) "utf-8"))
+      (title (or (ref "title" env) "some default")))
+     (body
+      (cond ((functionp template-body) (funcall template-body))
+            (t template-body)))))
+#+end_src
+
+if we call it like this
+(note that the template body is given as a =lambda= because with this library, the tags are the same as rendering the tags, and rendering the tags is the same as executing the xml, so sometimes parameterizing the xml requires parameterizing the execution, aka =lambda=)
+#+begin_src lisp
+  (template :env '(("title" . "example examplinos"))
+            :template-body
+            (lambda ()
+              (h1 "the fresh prince of bel air")
+              (div :class "fresh"
+                   (h2 "opening")
+                   (ul
+                    (dolist (x
+                             '("now this is a story all about how"
+                               "I did not know the lyrics for this song"
+                               "sorry"))
+                      (li x)
+                      (li "I repeat : " x))))))
+
+#+end_src
+
+it will render the following
+#+begin_src html
+  <html>
+    <head>
+      <meta charset = "utf-8"></meta>
+      <title>example examplinos</title>
+    </head>
+    <body>
+      <h1>the fresh prince of bel air</h1>
+      <div class = "fresh">
+        <h2>opening</h2>
+        <ul>
+          <li>now this is a story all about how</li>
+          <li>I repeat : now this is a story all about how</li>
+          <li>I did not know the lyrics for this song</li>
+          <li>I repeat : I did not know the lyrics for this song</li>
+          <li>sorry</li>
+          <li>I repeat : sorry</li>
+        </ul>
+      </div>
+    </body>
+  </html>
+#+end_src
+
+** User defined xml schemas
+as you might have seen in the boilerplate disclamer, the rendering is in no way tied or coupled to html in particular, to better show this, let us add the following lines to the above mentioned boilerplate to tell the system how to render [[http://wiki.ros.org/roslaunch/XML][roslaunch files]]
+#+begin_src lisp
+  (paragraph launch)
+  (paragraph node)
+  (xmltags:deftag param :closep t :newline-after-close t)
+#+end_src
+
+and voilà
+#+begin_src lisp
+  (launch
+   (param :name "some" :value "thing")
+   (param :name "other" :value "else")
+   (node :pkg "telemetry" :type "actuator_logger" :respawn "true"
+         (param :name "log_file" :value "$(find telemetry)/logs/act.log"))
+   (node :pkg "telemetry" :type "sensor_logger" :respawn "true"
+         (param :name "log_file" :value "$(find telemetry)/logs/sens.log")))
+#+end_src
+
+renders to
+#+begin_src xml
+  <launch>
+    <param name = "some"value = "thing"/>
+    <param name = "other"value = "else"/>
+    <node pkg = "car_telemetry"type = "actuator_logger"respawn = "true">
+      <param name = "log_file"value = "$(find telemetry)/logs/act.log"/>
+    </node>
+    <node pkg = "car_telemetry"type = "sensor_logger"respawn = "true">
+      <param name = "log_file"value = "$(find telemetry)/logs/sens.log"/>
+    </node>
+  </launch>
+#+end_src
+
+* "API Reference"
+oh, quite an overstatement this name is, quite an overstatement indeed!
+ - =(xmltags:deftag name &key closep ...)= :: define a tag =name=, =closep= determines whether the tag is closed (for example: =<img src ="" \>= or =<br/>=, without a second tag), or open (for example: =<p> some text </p>=, with an opening *and* closing tag), once you have defined a tag, you may call.
+   some additional =&key= arguments are also provided to control where to put newlines when printing the tag, they are not necessairy for the xml to be valid, as the standard ignores such blank chars, but having some legible output helps quite a bit with debugging 
+ - =(tag [:attr-name attr-val]* [child]*)= :: which will expand to the appropriate code for printing such a tag, with such attributes, and such children
+ - xmlprint:*xml-out-stream* :: output stream all the xml gets rendered to, defaults to =*standard-outupt*=, but having it as a parameter will make it easier to render to strings if I need to
+
+
