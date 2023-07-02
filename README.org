@@ -12,9 +12,7 @@ shamelessly inspired by
 and possibly already done by
  - [[https://github.com/brennonyork/clj-template]]
 
- - see examples to have a clue what this is about
- - =macroexpand-1= everything this library has, it's the best way I have found to undestand what it does
- - api reference is criminally incomplete, becuase the api is criminally incomplete
+if you want to just have a clue what this is about see the examples, any further explaination will be achievable by pulling you hair out and spammin =macroexpand-1= at everthing this library provides, the code is not yet documentation enough and this is all between experimental and embrional
 
 ** "Philosopy"
 we want the tag rendering logic to be as intertwineable as possible with the normal common lisp logic
@@ -119,18 +117,18 @@ this is where the fun begins, there is nothing special about the variables used 
   (let ((big-title (string-upcase "I am a big title"))
         (divclass "some-class"))
     (h1 big-title)
-    (div :class divclass)
-    (p "the class of my parent div is : " divclass))
+    (div :class divclass
+         (p "the class of my parent div is : " divclass)))
 #+end_src
 
 expands to
 #+begin_src html
   <h1>I AM A BIG TITLE</h1>
   <div class = "some-class">
+    <p>
+      the class of my parent div is : some-class
+    </p>
   </div>
-  <p>
-    the class of my parent div is : some-class
-  </p>
 #+end_src
 
 (it is not (yet) supported to have the keys of =key = attr= be read from variables
@@ -222,7 +220,9 @@ some sick joke looking like a template system might be instead achieved in the e
 #+end_src
 
 if we call it like this
-(note that the template body is given as a =lambda= because with this library, the tags are the same as rendering the tags, and rendering the tags is the same as executing the xml, so sometimes parameterizing the xml requires parameterizing the execution, aka =lambda=)
+#+begin_quote
+optional note: the template body is given as a =lambda= because, as of now, with this library, the tags are the same as rendering the tags, and rendering the tags is the same as "executing the tags", meaning sometimes parameterizing the xml requires parameterizing the execution, aka =lambda=
+#+end_quote
 #+begin_src lisp
   (template :env '(("title" . "example examplinos"))
             :template-body
@@ -302,6 +302,6 @@ oh, quite an overstatement this name is, quite an overstatement indeed!
  - =(xmltags:deftag name &key closep ...)= :: define a tag =name=, =closep= determines whether the tag is closed (for example: =<img src ="" \>= or =<br/>=, without a second tag), or open (for example: =<p> some text </p>=, with an opening *and* closing tag), once you have defined a tag, you may call.
    some additional =&key= arguments are also provided to control where to put newlines when printing the tag, they are not necessairy for the xml to be valid, as the standard ignores such blank chars, but having some legible output helps quite a bit with debugging 
  - =(tag [:attr-name attr-val]* [child]*)= :: which will expand to the appropriate code for printing such a tag, with such attributes, and such children
- - xmlprint:*xml-out-stream* :: output stream all the xml gets rendered to, defaults to =*standard-outupt*=, but having it as a parameter will make it easier to render to strings if I need to
+ - =xmlprint:*xml-out-stream*= :: output stream all the xml gets rendered to, defaults to =*standard-outupt*=, but having it as a parameter will make it much easier to render to strings if I need to
 
 

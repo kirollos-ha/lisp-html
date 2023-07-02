@@ -23,6 +23,7 @@
 (paragraph html)
 (paragraph head)
 (paragraph body)
+(paragraph p)
 
 (paragraph ul)
 (paragraph div)
@@ -39,18 +40,23 @@
 (oneline meta)
 (oneline title)
 
+;; ros launch files
+(paragraph launch)
+(paragraph node)
+(xmltags:deftag param :closep t :newline-after-close t)
+
 (defun ref (key env &key (test #'string=))
+  "rendering contexts might have to be defined in some more efficient manner later"
   (cdr (assoc key env :test test)))
 
-;; base/scratch per vedere poi un sistema di templating un po' più fatto
-(defun template (&key fille-mi env)
+(defun template (&key env template-body)
   (html
    (head
     (meta :charset (or (ref "charset" env) "utf-8"))
     (title (or (ref "title" env) "titolo di default")))
    (body
-    (cond ((functionp fille-mi) (funcall fille-mi))
-	  (t fille-mi)))))
+    (cond ((functionp template-body) (funcall template-body))
+	  (t template-body)))))
 
 #|
 note per poi
