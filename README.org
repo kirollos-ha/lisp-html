@@ -288,10 +288,10 @@ renders to
   <launch>
     <param name = "some"value = "thing"/>
     <param name = "other"value = "else"/>
-    <node pkg = "car_telemetry"type = "actuator_logger"respawn = "true">
+    <node pkg = "telemetry"type = "actuator_logger"respawn = "true">
       <param name = "log_file"value = "$(find telemetry)/logs/act.log"/>
     </node>
-    <node pkg = "car_telemetry"type = "sensor_logger"respawn = "true">
+    <node pkg = "telemetry"type = "sensor_logger"respawn = "true">
       <param name = "log_file"value = "$(find telemetry)/logs/sens.log"/>
     </node>
   </launch>
